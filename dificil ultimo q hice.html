@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Difícil</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/*──────────────────────────────────────────
+  RESET & BASE
+──────────────────────────────────────────*/
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --ink:#0d1117; --ink2:#161c26; --ink3:#1e2736;
+  --gold:#c9a84c; --gold2:#8a6c28; --goldL:#eddfa0;
+  --felt:#1a3a2a; --felt2:#143020;
+  --red:#b83232; --green:#2d7a3a;
+  --txt:#e8e2d4; --txt2:#9c9080; --txt3:#6a6050;
+  --bdr:#2a3a4a; --bdrG:rgba(201,168,76,.35);
+}
+html,body{width:100%;min-height:100%;background:var(--ink);color:var(--txt);font-family:'Lora',serif;overflow-x:hidden;}
+button{font-family:'Lora',serif;}
+
+/*──────────────────────────────────────────
+  SCREENS — data-screen sistema
+──────────────────────────────────────────*/
+[data-screen]{display:none;}
+[data-screen].on{display:flex;flex-direction:column;min-height:100svh;animation:fadeUp .25s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.pg-center{align-items:center;justify-content:center;padding:24px 16px;}
+.pg-scroll{align-items:stretch;padding:20px 16px;overflow-y:auto;}
+.pg-game{align-items:stretch;overflow:hidden;height:100svh;}
+
+/*──────────────────────────────────────────
+  BUTTONS
+──────────────────────────────────────────*/
+.btn{
+  font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;
+  padding:14px 24px;border:2px solid var(--bdr);
+  background:var(--ink3);color:var(--txt);cursor:pointer;
+  transition:all .2s;width:100%;position:relative;overflow:hidden;
+}
+.btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(201,168,76,.15),transparent);
+  transform:translateX(-100%);transition:transform .4s;
+}
+.btn:hover::after{transform:translateX(100%);}
+.btn:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.5);}
+.btn:active{transform:translateY(0);}
+.btn-g{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--ink);border-color:var(--gold);font-weight:700;}
+.btn-g:hover{box-shadow:0 6px 24px rgba(201,168,76,.4);}
+.btn-r{background:var(--red);border-color:var(--red);color:#fff;}
+.btn-sm{padding:9px 18px;font-size:15px;width:auto;letter-spacing:1px;}
+.btn-ghost{background:transparent;border-color:var(--bdr);}
+.btn-ghost:hover{border-color:var(--txt2);}
+
+/*──────────────────────────────────────────
+  FORM ELEMENTS
+──────────────────────────────────────────*/
+.fbox{width:100%;max-width:400px;display:flex;flex-direction:column;gap:16px;}
+.ftitle{font-family:'Bebas Neue',cursive;font-size:36px;color:var(--gold);letter-spacing:3px;text-align:center;}
+.flabel{display:block;font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:6px;text-transform:uppercase;letter-spacing:2px;}
+.finput,.fsel{
+  width:100%;padding:12px 14px;
+  background:var(--ink3);border:2px solid var(--bdr);
+  color:var(--txt);font-family:'Lora',serif;font-size:16px;
+  transition:border-color .2s;
+}
+.finput:focus,.fsel:focus{outline:none;border-color:var(--gold);}
+.fsel option{background:var(--ink3);}
+
+/*──────────────────────────────────────────
+  MENU
+──────────────────────────────────────────*/
+.menu-title{
+  font-family:'Bebas Neue',cursive;
+  font-size:clamp(70px,16vw,110px);
+  color:var(--gold);letter-spacing:8px;
+  text-shadow:0 0 60px rgba(201,168,76,.3),0 4px 0 rgba(0,0,0,.6);
+  line-height:1;
+}
+.menu-sub{font-size:12px;letter-spacing:5px;text-transform:uppercase;color:var(--txt2);margin:8px 0 48px;}
+.menu-col{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;}
+
+/*──────────────────────────────────────────
+  AVATAR PICKER
+──────────────────────────────────────────*/
+.avatars{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:4px 0;}
+.av-opt{
+  width:44px;height:44px;border-radius:50%;border:2px solid var(--bdr);
+  background:var(--ink3);cursor:pointer;font-size:22px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.av-opt:hover{border-color:var(--gold);transform:scale(1.1);}
+.av-opt.sel{border-color:var(--gold);background:rgba(201,168,76,.2);box-shadow:0 0 10px rgba(201,168,76,.4);}
+.av-big{
+  width:54px;height:54px;border-radius:50%;
+  background:var(--ink3);border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;flex-shrink:0;
+}
+
+/*──────────────────────────────────────────
+  WAITING ROOM
+──────────────────────────────────────────*/
+.wbox{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px;}
+.big-code{
+  font-family:'Bebas Neue',cursive;font-size:56px;
+  color:var(--gold);letter-spacing:10px;text-align:center;
+  text-shadow:0 0 24px rgba(201,168,76,.25);
+}
+.player-list{background:var(--ink3);border:2px solid var(--bdr);}
+.pl-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--bdr);}
+.pl-row:last-child{border-bottom:none;}
+.pl-name{font-size:16px;}
+
+/*──────────────────────────────────────────
+  GAME TABLE — la pantalla principal
+──────────────────────────────────────────*/
+.table-wrap{
+  flex:1;overflow:hidden;
+  display:grid;
+  /* 5x5 grid: jugadores arriba/abajo/izq/der + centro */
+  grid-template-columns:80px 1fr 80px;
+  grid-template-rows:auto 1fr auto;
+  gap:4px;padding:6px;
+  background:var(--ink);
+  max-width:900px;margin:0 auto;width:100%;
+}
+
+/* header barra */
+.table-header{
+  grid-column:1/-1;
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--ink3);border:1px solid var(--bdrG);
+  padding:8px 12px;gap:8px;flex-wrap:wrap;
+}
+.t-round{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--gold);letter-spacing:2px;}
+.t-trump-area{display:flex;align-items:center;gap:8px;}
+.t-trump-lbl{font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:1px;}
+
+/* zona izquierda y derecha: jugadores laterales */
+.seat-left,.seat-right{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+}
+.seat-left{grid-column:1;grid-row:2;}
+.seat-right{grid-column:3;grid-row:2;}
+
+/* mesa central */
+.table-center{
+  grid-column:2;grid-row:2;
+  display:flex;flex-direction:column;gap:4px;
+  min-height:0;overflow:hidden;
+}
+
+/* felt: la zona de cartas jugadas */
+.felt{
+  flex:1;
+  background:radial-gradient(ellipse at center, var(--felt) 60%, var(--felt2) 100%);
+  border:2px solid rgba(255,255,255,.06);
+  border-radius:12px;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:14px;padding:14px;
+  position:relative;min-height:120px;
+}
+.felt-empty{color:rgba(255,255,255,.2);font-size:13px;text-transform:uppercase;letter-spacing:2px;}
+
+/* zona inferior: cartas en mano del jugador humano */
+.hand-zone{
+  background:var(--ink2);border:1px solid var(--bdrG);border-radius:8px;
+  padding:10px 8px 6px;
+  display:flex;align-items:flex-end;justify-content:center;
+  flex-wrap:wrap;gap:5px;min-height:96px;
+}
+
+/* seat de jugadores arriba */
+.seats-top{
+  grid-column:1/-1;grid-row:0;
+  display:flex;justify-content:center;gap:8px;flex-wrap:wrap;
+  padding:2px 4px;
+}
+
+/* Redefinir grid para permitir fila superior */
+.table-wrap{
+  grid-template-rows:auto auto 1fr auto;
+}
+.table-header{grid-row:1;}
+.seats-top{grid-column:1/-1;grid-row:2;}
+.seat-left{grid-row:3;}
+.table-center{grid-row:3;}
+.seat-right{grid-row:3;}
+.seats-bottom{
+  grid-column:1/-1;grid-row:4;
+  display:flex;justify-content:center;gap:8px;padding:2px 4px;
+}
+
+/*──────────────────────────────────────────
+  SEAT WIDGET (cara + nombre + info)
+──────────────────────────────────────────*/
+.seat{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 8px;border-radius:6px;border:1px solid transparent;
+  transition:border-color .2s,background .2s;
+  min-width:60px;max-width:80px;
+}
+.seat.active-turn{border-color:var(--gold);background:rgba(201,168,76,.08);}
+.seat.is-dealer::after{
+  content:'R';font-family:'Bebas Neue',cursive;font-size:10px;
+  background:var(--gold);color:var(--ink);padding:1px 4px;
+  border-radius:2px;margin-top:2px;letter-spacing:1px;
+}
+.seat-av{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--ink3);border:2px solid var(--bdr);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;position:relative;
+}
+.seat.active-turn .seat-av{border-color:var(--gold);}
+.seat-name{font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;text-align:center;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.seat-info{font-size:10px;color:var(--txt3);}
+/* medalla predicción */
+.seat-pred{
+  font-family:'Bebas Neue',cursive;font-size:13px;
+  background:var(--ink2);border:1px solid var(--bdrG);
+  color:var(--goldL);padding:1px 6px;border-radius:10px;
+}
+
+/* Cartas laterales (oponentes a los lados) */
+.side-cards{
+  display:flex;flex-direction:column;gap:3px;align-items:center;margin-top:4px;
+}
+.mini-card-back{
+  width:20px;height:28px;background:linear-gradient(135deg,#1a3a6a,#0d2048);
+  border:1px solid rgba(255,255,255,.15);border-radius:3px;
+}
+
+/*──────────────────────────────────────────
+  CARDS
+──────────────────────────────────────────*/
+.card{
+  width:52px;height:78px;
+  background:#f7f2ea;border:1.5px solid #c0b090;border-radius:6px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex-shrink:0;cursor:default;
+  transition:transform .18s,box-shadow .18s,border-color .18s;
+  box-shadow:0 2px 6px rgba(0,0,0,.4);position:relative;
+}
+.card-v{font-family:'Bebas Neue',cursive;font-size:20px;line-height:1;}
+.card-s{font-size:19px;line-height:1;margin-top:1px;}
+.card.oros  .card-v,.card.oros  .card-s{color:#b8820a;}
+.card.copas .card-v,.card.copas .card-s{color:#9a1020;}
+.card.espadas .card-v,.card.espadas .card-s{color:#1a1a2e;}
+.card.bastos  .card-v,.card.bastos  .card-s{color:#1a4020;}
+.card.trump-glow{border-color:var(--gold);box-shadow:0 0 12px rgba(201,168,76,.5);}
+/* mano del jugador */
+.hand-zone .card{width:58px;height:88px;}
+.hand-zone .card .card-v{font-size:22px;}
+.hand-zone .card .card-s{font-size:21px;}
+.card.c-ok{cursor:pointer;}
+.card.c-ok:hover{transform:translateY(-16px);box-shadow:0 12px 24px rgba(0,0,0,.5);}
+.card.c-pick{transform:translateY(-22px);border-color:var(--gold);border-width:2.5px;box-shadow:0 14px 28px rgba(201,168,76,.55);}
+.card.c-block{opacity:.35;cursor:not-allowed;}
+/* played card en el felt */
+.played-slot{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.played-slot .pname{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;}
+/* winner highlight */
+.card.c-winner{box-shadow:0 0 16px 4px rgba(201,168,76,.7);border-color:var(--gold);}
+
+/*──────────────────────────────────────────
+  PREDICTION SCREEN
+──────────────────────────────────────────*/
+.pred-page{align-items:center;padding:20px 16px 32px;overflow-y:auto;}
+.pred-box{width:100%;max-width:420px;display:flex;flex-direction:column;gap:13px;}
+.pred-title{font-family:'Bebas Neue',cursive;font-size:32px;color:var(--gold);letter-spacing:3px;text-align:center;}
+.pred-meta{font-size:12px;color:var(--txt2);text-align:center;text-transform:uppercase;letter-spacing:2px;}
+.trump-row{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--ink3);border:1px solid var(--bdrG);padding:10px;}
+.others-panel{background:var(--ink3);border:1px solid var(--bdrG);padding:12px;}
+.others-t{font-size:11px;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+.other-row{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:var(--ink2);margin-bottom:4px;}
+.other-row:last-child{margin-bottom:0;}
+.other-v{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--gold);}
+.num-ctrl{display:flex;align-items:center;justify-content:center;gap:16px;}
+.n-btn{
+  width:48px;height:48px;border-radius:50%;
+  border:2px solid var(--bdrG);background:var(--ink3);color:var(--txt);
+  font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.n-btn:hover{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+.n-btn:active{transform:scale(.9);}
+.n-val{font-family:'Bebas Neue',cursive;font-size:64px;color:var(--gold);min-width:72px;text-align:center;line-height:1;}
+.pred-warn{font-size:12px;color:var(--red);text-align:center;min-height:20px;}
+.pred-cards{display:flex;justify-content:center;flex-wrap:wrap;gap:5px;}
+
+/*──────────────────────────────────────────
+  TURN/ACTION BAR
+──────────────────────────────────────────*/
+.turn-bar{
+  background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);
+  padding:7px 12px;text-align:center;
+  font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;
+}
+.trick-banner{
+  background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);
+  padding:8px 12px;text-align:center;font-size:13px;color:var(--goldL);
+}
+.action-row{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:4px 0;}
+
+/*──────────────────────────────────────────
+  SCOREBOARD
+──────────────────────────────────────────*/
+.sb-panel{background:var(--ink3);border:1px solid var(--bdrG);overflow:hidden;}
+.sb-head{font-family:'Bebas Neue',cursive;font-size:16px;color:var(--gold);letter-spacing:2px;padding:8px 12px;border-bottom:1px solid var(--bdrG);}
+.sb-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--bdr);}
+.sb-row:last-child{border-bottom:none;}
+.sb-n{font-weight:600;font-size:14px;}
+.sb-m{font-size:11px;color:var(--txt2);margin-top:1px;}
+.sb-p{font-family:'Bebas Neue',cursive;font-size:24px;color:var(--gold);}
+.sb-p.neg{color:var(--red);}
+
+/*──────────────────────────────────────────
+  TOAST
+──────────────────────────────────────────*/
+.toast{
+  position:fixed;top:12px;left:50%;
+  transform:translateX(-50%) translateY(-120px);
+  background:var(--ink3);border:1.5px solid var(--gold);
+  padding:11px 20px;border-radius:6px;
+  box-shadow:0 6px 24px rgba(0,0,0,.6);
+  z-index:9999;transition:transform .28s ease;
+  max-width:90%;text-align:center;font-size:15px;pointer-events:none;
+}
+.toast.on{transform:translateX(-50%) translateY(0);}
+.toast.err{border-color:var(--red);background:rgba(184,50,50,.15);color:#ffaaaa;}
+
+/*──────────────────────────────────────────
+  MODAL
+──────────────────────────────────────────*/
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:8000;padding:14px;}
+.modal.on{display:flex;}
+.modal-box{background:var(--ink2);border:2px solid var(--gold);padding:32px 26px;max-width:460px;width:100%;border-radius:10px;display:flex;flex-direction:column;gap:14px;text-align:center;}
+.modal-title{font-family:'Bebas Neue',cursive;font-size:36px;color:var(--gold);letter-spacing:3px;}
+.modal-body{font-size:16px;line-height:1.7;}
+.final-list{background:var(--ink3);border:1px solid var(--bdrG);padding:12px;text-align:left;}
+.final-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:14px;}
+.final-row:last-child{border-bottom:none;}
+.final-winner{color:var(--gold);font-weight:700;}
+
+/*──────────────────────────────────────────
+  RULES & ADMIN
+──────────────────────────────────────────*/
+.rules-inner{max-width:660px;width:100%;margin:0 auto;}
+.r-title{font-family:'Bebas Neue',cursive;font-size:46px;color:var(--gold);letter-spacing:3px;text-align:center;margin-bottom:20px;}
+.r-block{background:var(--ink3);border:1px solid var(--bdrG);padding:16px;margin-bottom:12px;}
+.r-block h2{font-family:'Bebas Neue',cursive;font-size:22px;color:var(--gold);letter-spacing:2px;margin-bottom:8px;}
+.r-block p,.r-block li{font-size:15px;line-height:1.8;margin-bottom:5px;}
+.r-block ul{padding-left:16px;}
+.admin-inner{max-width:580px;width:100%;margin:0 auto;}
+.a-title{font-family:'Bebas Neue',cursive;font-size:36px;color:var(--gold);letter-spacing:2px;margin-bottom:16px;text-align:center;}
+.rm-row{background:var(--ink3);border:1px solid var(--bdrG);padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.rm-code{font-family:'Bebas Neue',cursive;font-size:22px;color:var(--gold);letter-spacing:2px;}
+.rm-meta{font-size:12px;color:var(--txt2);margin-top:2px;}
+
+/* chat */
+.chat-box{background:var(--ink3);border:1px solid var(--bdrG);}
+.chat-msgs{height:80px;overflow-y:auto;padding:7px 11px;}
+.chat-msg{font-size:13px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.chat-from{color:var(--gold);font-weight:600;margin-right:4px;}
+.chat-row{display:flex;border-top:1px solid var(--bdrG);}
+.chat-inp{flex:1;padding:9px 12px;background:transparent;border:none;color:var(--txt);font-family:'Lora',serif;font-size:14px;}
+.chat-inp:focus{outline:none;}
+.chat-send{padding:9px 14px;background:var(--gold2);border:none;border-left:1px solid var(--bdrG);color:var(--ink);font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:1px;cursor:pointer;}
+.chat-send:hover{background:var(--gold);}
+
+/*──────────────────────────────────────────
+  RESPONSIVE
+──────────────────────────────────────────*/
+@media(max-width:500px){
+  .table-wrap{grid-template-columns:60px 1fr 60px;padding:4px;gap:3px;}
+  .card{width:44px;height:66px;}.card-v{font-size:17px;}.card-s{font-size:16px;}
+  .hand-zone .card{width:50px;height:76px;}
+  .hand-zone .card .card-v{font-size:19px;}.hand-zone .card .card-s{font-size:18px;}
+  .seat-av{width:28px;height:28px;font-size:14px;}
+  .n-val{font-size:50px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SCREEN: MENÚ PRINCIPAL
+══════════════════════════════════════ -->
+<div data-screen="menu" class="on pg-center">
+  <h1 class="menu-title">DIFÍCIL</h1>
+  <p class="menu-sub">Juego de Cartas · 2 a 6 Jugadores</p>
+  <div class="menu-col">
+    <button class="btn btn-g" onclick="go('create')">Crear Sala</button>
+    <button class="btn"       onclick="go('join')">Unirse a Sala</button>
+    <button class="btn"       onclick="go('ai')">Jugar contra IA</button>
+    <button class="btn"       onclick="go('rules')">Ver Reglas</button>
+    <button class="btn btn-ghost" onclick="go('admin');renderAdmin()">Administrar Salas</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: CREAR SALA
+══════════════════════════════════════ -->
+<div data-screen="create" class="pg-center">
+  <div class="fbox">
+    <h2 class="ftitle">Crear Sala</h2>
+    <div>
+      <label class="flabel">Tu nombre</label>
+      <input id="crName" class="finput" maxlength="18" placeholder="Ej: Rodrigo">
+    </div>
+    <div>
+      <label class="flabel">Tu avatar</label>
+      <div class="avatars" id="crAvatars"></div>
+    </div>
+    <button class="btn btn-g" onclick="createRoom()">Crear Sala</button>
+    <button class="btn btn-ghost" onclick="go('menu')">← Volver</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: UNIRSE A SALA
+══════════════════════════════════════ -->
+<div data-screen="join" class="pg-center">
+  <div class="fbox">
+    <h2 class="ftitle">Unirse</h2>
+    <div>
+      <label class="flabel">Tu nombre</label>
+      <input id="joinName" class="finput" maxlength="18" placeholder="Ej: Marta">
+    </div>
+    <div>
+      <label class="flabel">Tu avatar</label>
+      <div class="avatars" id="joinAvatars"></div>
+    </div>
+    <div>
+      <label class="flabel">Código de sala</label>
+      <input id="joinCode" class="finput" maxlength="6" placeholder="XXXXXX"
+        style="text-transform:uppercase;letter-spacing:5px;font-family:'Bebas Neue',cursive;font-size:26px;text-align:center;">
+    </div>
+    <button class="btn btn-g" onclick="joinRoom()">Unirse</button>
+    <button class="btn btn-ghost" onclick="go('menu')">← Volver</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: CONTRA IA
+══════════════════════════════════════ -->
+<div data-screen="ai" class="pg-center">
+  <div class="fbox">
+    <h2 class="ftitle">Contra IA</h2>
+    <div>
+      <label class="flabel">Tu nombre</label>
+      <input id="aiName" class="finput" maxlength="18" placeholder="Ej: Juan">
+    </div>
+    <div>
+      <label class="flabel">Tu avatar</label>
+      <div class="avatars" id="aiAvatars"></div>
+    </div>
+    <div>
+      <label class="flabel">Cantidad de oponentes IA</label>
+      <select id="aiCount" class="fsel">
+        <option value="1">1 oponente</option>
+        <option value="2">2 oponentes</option>
+        <option value="3" selected>3 oponentes</option>
+        <option value="4">4 oponentes</option>
+        <option value="5">5 oponentes</option>
+      </select>
+    </div>
+    <div>
+      <label class="flabel">Dificultad</label>
+      <select id="aiDiff" class="fsel">
+        <option value="easy">Fácil</option>
+        <option value="normal" selected>Normal</option>
+        <option value="hard">Difícil</option>
+      </select>
+    </div>
+    <button class="btn btn-g" onclick="startAI()">Comenzar Partida</button>
+    <button class="btn btn-ghost" onclick="go('menu')">← Volver</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: SALA DE ESPERA
+══════════════════════════════════════ -->
+<div data-screen="wait" class="pg-center">
+  <div class="wbox">
+    <h2 class="ftitle">Sala de Espera</h2>
+    <div style="text-align:center;">
+      <p style="font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Código</p>
+      <div class="big-code" id="waitCode">------</div>
+    </div>
+    <div style="text-align:center;">
+      <button class="btn btn-sm" onclick="shareLink()">📋 Copiar enlace</button>
+    </div>
+    <div class="player-list" id="waitList"></div>
+    <button class="btn btn-g" id="startBtn" onclick="hostStart()">Iniciar Juego</button>
+    <button class="btn btn-ghost" onclick="leaveRoom()">← Salir</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: PREDICCIÓN
+══════════════════════════════════════ -->
+<div data-screen="pred" class="pred-page">
+  <div class="pred-box">
+    <p class="pred-title">Predicción</p>
+    <p class="pred-meta" id="predMeta">Ronda 1 · 1 carta</p>
+
+    <div class="trump-row">
+      <span style="font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:1px;">Triunfo:</span>
+      <div id="predTrump"></div>
+      <span id="predTrumpTxt" style="font-size:13px;color:var(--txt2);"></span>
+    </div>
+
+    <div class="others-panel">
+      <div class="others-t">Predicciones ya hechas</div>
+      <div id="predOthers"><p style="color:var(--txt2);font-size:13px;">Ninguna todavía.</p></div>
+    </div>
+
+    <div>
+      <p style="font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:6px;">¿Cuántas bazas ganarás?</p>
+      <div class="num-ctrl">
+        <button class="n-btn" onclick="adjPred(-1)">−</button>
+        <div class="n-val" id="predNum">0</div>
+        <button class="n-btn" onclick="adjPred(1)">+</button>
+      </div>
+      <p class="pred-warn" id="predWarn"></p>
+    </div>
+
+    <div>
+      <p style="font-size:11px;color:var(--txt2);text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:6px;">Tus cartas</p>
+      <div class="pred-cards" id="predHand"></div>
+    </div>
+
+    <button class="btn btn-g" onclick="confirmPred()">Confirmar Predicción</button>
+    <button class="btn btn-ghost" onclick="go('game')">← Ver Mesa</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: JUEGO
+══════════════════════════════════════ -->
+<div data-screen="game" class="pg-game">
+  <div class="table-wrap">
+
+    <!-- Header -->
+    <div class="table-header">
+      <div class="t-round" id="roundLbl">Ronda 1/14</div>
+      <div class="t-trump-area">
+        <span class="t-trump-lbl">Triunfo</span>
+        <div id="trumpDisp"></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-sm" onclick="toggleSB()">📊</button>
+        <button class="btn btn-sm" id="chatToggle" style="display:none;" onclick="toggleChat()">💬</button>
+      </div>
+    </div>
+
+    <!-- Asientos arriba (jugadores 1-2 si hay muchos) -->
+    <div class="seats-top" id="seatsTop"></div>
+
+    <!-- Izquierda -->
+    <div class="seat-left" id="seatLeft"></div>
+
+    <!-- Centro -->
+    <div class="table-center">
+      <!-- Turn bar -->
+      <div class="turn-bar" id="turnBar" style="display:none;"></div>
+      <div class="trick-banner" id="trickBnr" style="display:none;"></div>
+
+      <!-- Scoreboard -->
+      <div class="sb-panel" id="sbPanel" style="display:none;">
+        <div class="sb-head">Puntuaciones</div>
+        <div id="sbContent"></div>
+      </div>
+
+      <!-- Felt: cartas jugadas -->
+      <div class="felt" id="felt">
+        <span class="felt-empty" id="feltEmpty">Mesa vacía</span>
+      </div>
+
+      <!-- Acciones -->
+      <div class="action-row" id="actionRow">
+        <button class="btn btn-g btn-sm" id="playBtn"  style="display:none;min-width:160px;" onclick="confirmPlay()">✋ Soltar carta</button>
+        <button class="btn btn-g btn-sm" id="contBtn"  style="display:none;min-width:160px;" onclick="continueGame()">OK → Continuar</button>
+      </div>
+
+      <!-- Mano del jugador humano -->
+      <div class="hand-zone" id="handZone"></div>
+
+      <!-- Chat -->
+      <div class="chat-box" id="chatBox" style="display:none;">
+        <div class="chat-msgs" id="chatMsgs"></div>
+        <div class="chat-row">
+          <input class="chat-inp" id="chatInp" placeholder="Mensaje..." maxlength="100">
+          <button class="chat-send" onclick="sendChat()">ENVIAR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Derecha -->
+    <div class="seat-right" id="seatRight"></div>
+
+    <!-- Asientos abajo (el jugador humano está abajo al centro, lo mostramos en hand-zone) -->
+    <div class="seats-bottom" id="seatsBottom"></div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: REGLAS
+══════════════════════════════════════ -->
+<div data-screen="rules" class="pg-scroll">
+  <div class="rules-inner">
+    <h1 class="r-title">Reglas</h1>
+    <div class="r-block">
+      <h2>Objetivo</h2>
+      <p>Acumular más puntos prediciendo exactamente cuántas bazas ganarás cada ronda.</p>
+    </div>
+    <div class="r-block">
+      <h2>Estructura</h2>
+      <p>14 rondas: rondas 1-7 ascendentes (1→7 cartas por jugador), rondas 8-14 descendentes (7→1 cartas). El repartidor rota cada ronda. El jugador a la derecha del repartidor empieza.</p>
+    </div>
+    <div class="r-block">
+      <h2>La Baraja</h2>
+      <p>Baraja española, 40 cartas: Oros 🟡, Copas 🍷, Espadas ⚔️, Bastos 🌿</p>
+      <p><strong>Orden (menor→mayor):</strong> 2, 3, 4, 5, 6, 7, 10, 11, 12, 1</p>
+      <p>La carta de muestra (mazo) define el palo de triunfo.</p>
+    </div>
+    <div class="r-block">
+      <h2>Predicción</h2>
+      <ul>
+        <li>Antes de jugar, cada jugador predice cuántas bazas ganará.</li>
+        <li>El último jugador NO puede cerrar (la suma no puede igualar el total de bazas).</li>
+        <li>Las predicciones son visibles para todos una vez confirmadas.</li>
+      </ul>
+    </div>
+    <div class="r-block">
+      <h2>Jugar Cartas</h2>
+      <ul>
+        <li>Si tenés cartas del palo inicial, <strong>debés seguirlo</strong>.</li>
+        <li>Si el palo inicial es triunfo y podés superar la carta más alta, <strong>debés matar</strong>.</li>
+        <li>Si no tenés del palo inicial, podés jugar cualquier carta.</li>
+        <li>Fuera del triunfo, no hay obligación de matar.</li>
+      </ul>
+    </div>
+    <div class="r-block">
+      <h2>Ganar una Baza</h2>
+      <ul>
+        <li>Con triunfos jugados → gana el triunfo más alto.</li>
+        <li>Sin triunfos → gana la carta más alta del palo inicial.</li>
+        <li>Empate de valor → gana quien tiró primero.</li>
+        <li>El ganador de la baza inicia la siguiente.</li>
+      </ul>
+    </div>
+    <div class="r-block">
+      <h2>Puntuación</h2>
+      <ul>
+        <li>Predijiste 0 y ganaste 0: <strong>+10 pts</strong></li>
+        <li>Predijiste 0 y ganaste N bazas: <strong>−10×N pts</strong></li>
+        <li>Acertaste (pred = ganadas): <strong>pred × 11 pts</strong></li>
+        <li>Ganaste menos: <strong>+1 pt por cada baza ganada</strong></li>
+        <li>Ganaste más: ganadas − 10 × (ganadas − predicción)</li>
+      </ul>
+    </div>
+    <button class="btn btn-g" onclick="go('menu')">← Volver al Menú</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: ADMIN
+══════════════════════════════════════ -->
+<div data-screen="admin" class="pg-scroll">
+  <div class="admin-inner">
+    <h2 class="a-title">Salas Activas</h2>
+    <div id="adminList"></div>
+    <button class="btn btn-ghost" style="margin-top:10px;" onclick="go('menu')">← Volver</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Modal Fin de Juego -->
+<div class="modal" id="endModal">
+  <div class="modal-box">
+    <h2 class="modal-title">¡Fin del Juego!</h2>
+    <div class="modal-body" id="endBody"></div>
+    <div class="final-list" id="endScores"></div>
+    <button class="btn btn-g" onclick="backToMenu()">Volver al Menú</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+// ══════════════════════════════════════════════════════
+//  CONSTANTES
+// ══════════════════════════════════════════════════════
+const SUITS = {
+  oros:    { n:'Oros',    s:'🟡' },
+  copas:   { n:'Copas',  s:'🍷' },
+  espadas: { n:'Espadas',s:'⚔️' },
+  bastos:  { n:'Bastos', s:'🌿' }
+};
+const ORDER   = [2,3,4,5,6,7,10,11,12,1]; // menor → mayor
+const TOTAL_R = 14;
+const AVATARS = ['🦁','🐯','🐻','🦊','🐺','🐸','🦄','🐉','🦅','🦋','🎭','👑','⚡','🌙','🔥','💎'];
+const AI_AVATARS = ['🤖','👾','🎮','🃏','🎲','♟️'];
+
+// ══════════════════════════════════════════════════════
+//  ESTADO GLOBAL
+// ══════════════════════════════════════════════════════
+function fresh(){
+  return {
+    mode:null, rc:null, pid:null, pname:null, pav:'🦁', owner:false,
+    players:[],      // [{id,name,av,isAI}]
+    round:1,
+    phase:'idle',    // idle|predicting|playing|trick_done|round_done|game_over
+    dealerIdx:0,     // índice del repartidor actual
+    turnIdx:0,       // índice del jugador en turno
+    trump:null,
+    preds:{},        // pid → número predicho
+    tricksWon:{},    // pid → bazas ganadas esta ronda
+    scores:{},       // pid → puntos acumulados
+    hands:{},        // pid → [cartas]
+    played:[],       // [{pid,card}] — cartas en la baza actual
+    trickWinnerId:null, // ganador de la última baza resuelta
+    selCard:null,
+    diff:'normal'
+  };
+}
+let G = fresh();
+let predVal = 0;
+
+// ══════════════════════════════════════════════════════
+//  AVATARES — inicializar pickers
+// ══════════════════════════════════════════════════════
+function initAvatarPicker(containerId, storeKey){
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  AVATARS.forEach((av,i) => {
+    const d = document.createElement('div');
+    d.className = 'av-opt' + (i===0?' sel':'');
+    d.textContent = av;
+    d.dataset.av = av;
+    d.onclick = () => {
+      el.querySelectorAll('.av-opt').forEach(x=>x.classList.remove('sel'));
+      d.classList.add('sel');
+      window[storeKey] = av;
+    };
+    el.appendChild(d);
+  });
+  window[storeKey] = AVATARS[0];
+}
+initAvatarPicker('crAvatars',   '_crAv');
+initAvatarPicker('joinAvatars', '_joinAv');
+initAvatarPicker('aiAvatars',   '_aiAv');
+
+// ══════════════════════════════════════════════════════
+//  NAVEGACIÓN
+// ══════════════════════════════════════════════════════
+function go(name){
+  document.querySelectorAll('[data-screen]').forEach(s=>s.classList.remove('on'));
+  const t = document.querySelector(`[data-screen="${name}"]`);
+  if(t){ t.classList.add('on'); t.scrollTop=0; }
+}
+
+// ══════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════
+let _tT;
+function toast(msg, err=false){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast on' + (err?' err':'');
+  clearTimeout(_tT);
+  _tT = setTimeout(()=>el.classList.remove('on'), 3000);
+}
+
+// ══════════════════════════════════════════════════════
+//  IDs & STORAGE
+// ══════════════════════════════════════════════════════
+function mkId(){ return 'p'+Date.now().toString(36)+Math.random().toString(36).substr(2,5); }
+function mkCode(){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join('');
+}
+function getRooms(){ try{ return JSON.parse(localStorage.getItem('dif_r'))||{}; }catch(e){ return{}; } }
+function setRooms(r){ try{ localStorage.setItem('dif_r',JSON.stringify(r)); }catch(e){} }
+function saveRoom(){
+  if(G.mode!=='multi') return;
+  const r=getRooms();
+  r[G.rc]={ rc:G.rc, players:G.players, phase:G.phase, round:G.round,
+    scores:G.scores, ts:Date.now(), trump:G.trump, preds:G.preds,
+    tricksWon:G.tricksWon, hands:G.hands, played:G.played,
+    dealerIdx:G.dealerIdx, turnIdx:G.turnIdx, trickWinnerId:G.trickWinnerId };
+  setRooms(r);
+}
+
+// ══════════════════════════════════════════════════════
+//  CREAR SALA
+// ══════════════════════════════════════════════════════
+function createRoom(){
+  const name = document.getElementById('crName').value.trim();
+  if(!name){ toast('Ingresá tu nombre',true); return; }
+  const av = window._crAv || AVATARS[0];
+  G = fresh();
+  G.mode='multi'; G.rc=mkCode(); G.pid=mkId();
+  G.pname=name; G.pav=av; G.owner=true;
+  G.players=[{id:G.pid, name, av, isAI:false}];
+  G.phase='waiting';
+  saveRoom();
+  renderWait();
+  go('wait');
+  toast('Sala creada: '+G.rc);
+}
+
+// ══════════════════════════════════════════════════════
+//  UNIRSE A SALA
+// ══════════════════════════════════════════════════════
+function joinRoom(){
+  const name = document.getElementById('joinName').value.trim();
+  const code = document.getElementById('joinCode').value.trim().toUpperCase();
+  const av   = window._joinAv || AVATARS[0];
+  if(!name){ toast('Ingresá tu nombre',true); return; }
+  if(!code){ toast('Ingresá el código',true); return; }
+  const rooms=getRooms(), room=rooms[code];
+  if(!room){ toast('Sala no encontrada',true); return; }
+  if(room.players.length>=6){ toast('Sala llena (máx. 6)',true); return; }
+  if(room.phase!=='waiting'){ toast('La partida ya comenzó',true); return; }
+  const pid=mkId();
+  room.players.push({id:pid, name, av, isAI:false});
+  rooms[code]=room; setRooms(rooms);
+  G=fresh();
+  G.mode='multi'; G.rc=code; G.pid=pid;
+  G.pname=name; G.pav=av; G.owner=false;
+  G.players=room.players; G.phase='waiting';
+  renderWait();
+  go('wait');
+  toast('¡Te uniste!');
+}
+
+function shareLink(){
+  const url=location.href.split('?')[0]+'?room='+G.rc;
+  navigator.clipboard?.writeText(url).then(()=>toast('Enlace copiado 📋')).catch(()=>toast('Código: '+G.rc));
+}
+
+function leaveRoom(){
+  if(!confirm('¿Salir?')) return;
+  if(G.mode==='multi'){
+    const r=getRooms();
+    if(r[G.rc]){
+      r[G.rc].players=r[G.rc].players.filter(p=>p.id!==G.pid);
+      if(!r[G.rc].players.length) delete r[G.rc]; else setRooms(r);
+    }
+  }
+  G=fresh(); go('menu');
+}
+
+function renderWait(){
+  document.getElementById('waitCode').textContent = G.rc||'------';
+  document.getElementById('waitList').innerHTML = G.players.map(p=>
+    `<div class="pl-row">
+       <div class="av-big" style="width:36px;height:36px;font-size:18px;">${p.av}</div>
+       <div class="pl-name">${p.name}</div>
+     </div>`
+  ).join('');
+  const btn=document.getElementById('startBtn');
+  btn.style.display = G.owner?'block':'none';
+  btn.disabled = G.players.length<2;
+  btn.textContent = G.players.length<2 ? 'Esperando más jugadores...' : `Iniciar Juego (${G.players.length} jugadores)`;
+}
+
+function hostStart(){
+  if(G.players.length<2){ toast('Mínimo 2 jugadores',true); return; }
+  initGame();
+}
+
+// ══════════════════════════════════════════════════════
+//  JUEGO CONTRA IA
+// ══════════════════════════════════════════════════════
+function startAI(){
+  const name  = document.getElementById('aiName').value.trim();
+  if(!name){ toast('Ingresá tu nombre',true); return; }
+  const count = parseInt(document.getElementById('aiCount').value);
+  const av    = window._aiAv || AVATARS[0];
+  G=fresh();
+  G.mode='ai'; G.pid=mkId(); G.pname=name; G.pav=av; G.owner=true;
+  G.diff=document.getElementById('aiDiff').value;
+  G.players=[{id:G.pid, name, av, isAI:false}];
+  for(let i=1;i<=count;i++){
+    G.players.push({id:mkId(), name:`IA ${i}`, av:AI_AVATARS[i%AI_AVATARS.length], isAI:true});
+  }
+  initGame();
+}
+
+// ══════════════════════════════════════════════════════
+//  INICIALIZAR JUEGO
+// ══════════════════════════════════════════════════════
+function initGame(){
+  G.round=1; G.dealerIdx=0; G.scores={};
+  G.players.forEach(p=>G.scores[p.id]=0);
+  startRound();
+  go('game');
+}
+
+// ══════════════════════════════════════════════════════
+//  INICIAR RONDA
+//  dealerIdx = índice del repartidor
+//  El primero en predecir/jugar = (dealerIdx+1) % N
+// ══════════════════════════════════════════════════════
+function startRound(){
+  const n = roundCards(G.round);
+  G.phase='predicting';
+  G.preds={}; G.tricksWon={}; G.hands={}; G.played=[];
+  G.selCard=null; G.trickWinnerId=null;
+  G.players.forEach(p=>G.tricksWon[p.id]=0);
+
+  // Repartir
+  const deck=buildDeck(); shuffle(deck);
+  let idx=0;
+  G.players.forEach(p=>{ G.hands[p.id]=deck.slice(idx,idx+n); idx+=n; });
+  G.trump = deck[idx];  // carta de muestra
+
+  // Primer turno de predicción: jugador a la derecha del repartidor
+  G.turnIdx = (G.dealerIdx+1) % G.players.length;
+
+  renderGame();
+  schedulePred();
+}
+
+function roundCards(r){ return r<=7 ? r : 15-r; }
+
+// ══════════════════════════════════════════════════════
+//  FLUJO DE PREDICCIONES
+// ══════════════════════════════════════════════════════
+function schedulePred(){
+  // ¿Ya predijeron todos?
+  if(Object.keys(G.preds).length === G.players.length){
+    beginPlaying();
+    return;
+  }
+  const cur = G.players[G.turnIdx];
+  if(cur.isAI){
+    setTimeout(()=>aiDoPred(cur), 650);
+  } else if(cur.id===G.pid){
+    renderGame(); // actualiza barra
+    openPredScreen();
+  } else {
+    renderGame();
+    // No es IA ni yo: otro humano en multijugador, esperamos
+  }
+}
+
+function openPredScreen(){
+  predVal=0;
+  document.getElementById('predNum').textContent='0';
+  document.getElementById('predMeta').textContent=
+    `Ronda ${G.round} · ${roundCards(G.round)} carta${roundCards(G.round)>1?'s':''}`;
+  document.getElementById('predTrump').innerHTML = cardHTML(G.trump,true);
+  document.getElementById('predTrumpTxt').textContent = SUITS[G.trump.suit].n;
+
+  const othersEl=document.getElementById('predOthers');
+  const done=G.players.filter(p=>G.preds[p.id]!==undefined);
+  othersEl.innerHTML = done.length
+    ? done.map(p=>`<div class="other-row"><span>${p.av} ${p.name}</span><span class="other-v">${G.preds[p.id]}</span></div>`).join('')
+    : '<p style="color:var(--txt2);font-size:13px;">Ninguna todavía.</p>';
+
+  const handEl=document.getElementById('predHand');
+  handEl.innerHTML='';
+  (G.hands[G.pid]||[]).forEach(c=>handEl.appendChild(mkCard(c)));
+
+  updatePredWarn();
+  go('pred');
+}
+
+function updatePredWarn(){
+  const n=roundCards(G.round);
+  const isLast=Object.keys(G.preds).length===G.players.length-1;
+  const wEl=document.getElementById('predWarn');
+  if(isLast){
+    const sum=Object.values(G.preds).reduce((a,b)=>a+b,0);
+    const bad=n-sum;
+    wEl.textContent=(bad>=0&&bad<=n) ? `⚠️ No podés predecir ${bad}` : '';
+  } else wEl.textContent='';
+}
+
+function adjPred(d){
+  predVal=Math.max(0,Math.min(roundCards(G.round),predVal+d));
+  document.getElementById('predNum').textContent=predVal;
+}
+
+function confirmPred(){
+  const n=roundCards(G.round);
+  const isLast=Object.keys(G.preds).length===G.players.length-1;
+  if(isLast){
+    const sum=Object.values(G.preds).reduce((a,b)=>a+b,0);
+    if(sum+predVal===n){ toast('¡No podés cerrar la suma!',true); return; }
+  }
+  G.preds[G.pid]=predVal;
+  // Avanzar turno SÓLO si no terminamos todas las predicciones
+  advancePredTurn();
+}
+
+// Avanza el turno de predicción y llama schedulePred
+function advancePredTurn(){
+  // Buscar siguiente jugador que aún no predicó
+  const N=G.players.length;
+  let next=(G.turnIdx+1)%N;
+  let loops=0;
+  while(G.preds[G.players[next].id]!==undefined && loops<N){
+    next=(next+1)%N; loops++;
+  }
+  G.turnIdx=next;
+  renderGame();
+  schedulePred();
+}
+
+// ══════════════════════════════════════════════════════
+//  IA PREDICCIÓN
+// ══════════════════════════════════════════════════════
+function aiDoPred(p){
+  // Seguridad: si ya predicó, saltar
+  if(G.preds[p.id]!==undefined){ advancePredTurn(); return; }
+
+  const hand=G.hands[p.id], ts=G.trump.suit, n=roundCards(G.round);
+  let v=0;
+
+  if(G.diff==='easy'){
+    v=Math.floor(Math.random()*(n+1));
+  } else if(G.diff==='normal'){
+    const tr=hand.filter(c=>c.suit===ts).length;
+    const hi=hand.filter(c=>ORDER.indexOf(c.value)>=7).length;
+    v=Math.min(n, Math.floor((tr+hi*0.7)));
+  } else {
+    // Difícil: evaluar cartas altas, triunfos altos, ases
+    let score=0;
+    hand.forEach(c=>{
+      const rank=ORDER.indexOf(c.value);
+      if(c.suit===ts){
+        score += rank>=7 ? 1 : rank>=5 ? 0.6 : 0.3;
+      } else {
+        if(c.value===1) score+=0.8;
+        else if(rank>=8) score+=0.4;
+      }
+    });
+    v=Math.min(n, Math.round(score));
+  }
+
+  // Regla de no-cerrar
+  const isLast=Object.keys(G.preds).length===G.players.length-1;
+  if(isLast){
+    const sum=Object.values(G.preds).reduce((a,b)=>a+b,0);
+    if(sum+v===n){
+      v = (v>0) ? v-1 : Math.min(n, v+1);
+    }
+  }
+  v=Math.max(0,Math.min(n,v));
+
+  G.preds[p.id]=v;
+  toast(`${p.av} ${p.name} predice ${v}`);
+  advancePredTurn();
+}
+
+// ══════════════════════════════════════════════════════
+//  COMENZAR FASE DE JUEGO
+// ══════════════════════════════════════════════════════
+function beginPlaying(){
+  G.phase='playing';
+  G.played=[];
+  // El primero en jugar: derecha del repartidor
+  G.turnIdx=(G.dealerIdx+1)%G.players.length;
+  renderGame();
+  schedulePlay();
+}
+
+// ══════════════════════════════════════════════════════
+//  FLUJO DE JUEGO DE CARTAS
+// ══════════════════════════════════════════════════════
+function schedulePlay(){
+  renderGame();
+  const cur=G.players[G.turnIdx];
+  if(cur.isAI){
+    setTimeout(()=>aiDoPlay(cur), 900);
+  } else if(cur.id===G.pid){
+    // turno del humano → renderGame ya mostró las cartas
+  }
+  // else: otro humano → esperamos
+}
+
+function selectCard(card, el){
+  const reason=invalidCard(card);
+  if(reason){ toast(reason,true); return; }
+  document.querySelectorAll('.hand-zone .card').forEach(e=>e.classList.remove('c-pick'));
+  el.classList.add('c-pick');
+  G.selCard=card;
+  document.getElementById('playBtn').style.display='block';
+}
+
+function confirmPlay(){
+  if(!G.selCard) return;
+  doPlayCard(G.pid, G.selCard);
+  G.selCard=null;
+  document.getElementById('playBtn').style.display='none';
+}
+
+function doPlayCard(pid, card){
+  // Quitar carta de la mano
+  G.hands[pid]=G.hands[pid].filter(c=>!(c.suit===card.suit&&c.value===card.value));
+  G.played.push({pid, card});
+
+  if(G.played.length===G.players.length){
+    resolveTrick();
+  } else {
+    G.turnIdx=(G.turnIdx+1)%G.players.length;
+    renderGame();
+    schedulePlay();
+  }
+  if(G.mode==='multi') saveRoom();
+}
+
+// ══════════════════════════════════════════════════════
+//  IA JUGAR CARTA
+// ══════════════════════════════════════════════════════
+function aiDoPlay(p){
+  const hand=G.hands[p.id];
+  const valid=hand.filter(c=>!invalidCard(c,p.id));
+  const pool=valid.length?valid:hand;
+  let pick=pool[0];
+
+  if(pool.length>1 && G.diff!=='easy'){
+    const need=(G.preds[p.id]||0)-(G.tricksWon[p.id]||0);
+    const ts=G.trump.suit;
+    const curWinner = G.played.length>0 ? calcTrickWinner(G.played) : null;
+    const amWinning = curWinner===p.id;
+
+    if(need>0 && !amWinning){
+      // Intentar ganar: jugar la carta válida más alta
+      const sorted=[...pool].sort((a,b)=>cmpCard(b,a));
+      // Preferir triunfos si tenemos
+      const tr=sorted.filter(c=>c.suit===ts);
+      pick=tr.length?tr[0]:sorted[0];
+    } else if(need<=0 || amWinning){
+      // Perder a propósito: carta válida más baja no-triunfo
+      const nonTr=pool.filter(c=>c.suit!==ts).sort((a,b)=>cmpCard(a,b));
+      pick=nonTr.length?nonTr[0]:[...pool].sort((a,b)=>cmpCard(a,b))[0];
+    }
+    if(G.diff==='hard'){
+      // Si ya voy ganando y no necesito más bazas, tiro lo más bajo
+      if(amWinning && need<=0){
+        const nonTr2=pool.filter(c=>c.suit!==ts).sort((a,b)=>cmpCard(a,b));
+        pick=nonTr2.length?nonTr2[0]:[...pool].sort((a,b)=>cmpCard(a,b))[0];
+      }
+    }
+  }
+
+  toast(`${p.av} ${p.name} juega ${pick.value} de ${SUITS[pick.suit].n}`);
+  doPlayCard(p.id, pick);
+}
+
+// ══════════════════════════════════════════════════════
+//  RESOLVER BAZA
+// ══════════════════════════════════════════════════════
+function resolveTrick(){
+  G.phase='trick_done';
+  const wid=calcTrickWinner(G.played);
+  G.trickWinnerId=wid;
+  G.tricksWon[wid]++;
+  const wp=G.players.find(p=>p.id===wid);
+
+  const bnr=document.getElementById('trickBnr');
+  bnr.textContent=`${wp.av} ${wp.name} gana la baza (total: ${G.tricksWon[wid]})`;
+  bnr.style.display='block';
+
+  renderGame(); // muestra las cartas en la mesa con el ganador resaltado
+
+  if(G.mode==='ai'){
+    setTimeout(()=>afterTrick(), 1600);
+  } else {
+    const cb=document.getElementById('contBtn');
+    cb.textContent='OK → Siguiente Baza';
+    cb.style.display=G.owner?'block':'none';
+  }
+}
+
+function afterTrick(){
+  const wid=G.trickWinnerId;
+  G.played=[];
+  document.getElementById('trickBnr').style.display='none';
+
+  const n=roundCards(G.round);
+  // Contar bazas completadas: suma de tricksWon
+  const totalDone=Object.values(G.tricksWon).reduce((a,b)=>a+b,0);
+
+  if(totalDone>=n){
+    endRound();
+  } else {
+    G.phase='playing';
+    // El ganador de la baza inicia la siguiente
+    G.turnIdx=G.players.findIndex(p=>p.id===wid);
+    renderGame();
+    schedulePlay();
+  }
+}
+
+function continueGame(){
+  if(G.phase==='trick_done'){
+    document.getElementById('contBtn').style.display='none';
+    afterTrick();
+  } else if(G.phase==='round_done'){
+    document.getElementById('contBtn').style.display='none';
+    nextRound();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  CALCULAR GANADOR DE BAZA
+// ══════════════════════════════════════════════════════
+function calcTrickWinner(played){
+  if(!played.length) return G.players[0].id;
+  const lead=played[0].card, ts=G.trump.suit;
+  let best=played[0];
+  for(let i=1;i<played.length;i++){
+    const e=played[i];
+    if(e.card.suit===ts){
+      if(best.card.suit!==ts || cmpCard(e.card,best.card)>0) best=e;
+    } else if(best.card.suit!==ts && e.card.suit===lead.suit){
+      if(cmpCard(e.card,best.card)>0) best=e;
+    }
+  }
+  return best.pid;
+}
+
+function cmpCard(a,b){ return ORDER.indexOf(a.value)-ORDER.indexOf(b.value); }
+
+// ══════════════════════════════════════════════════════
+//  FIN DE RONDA
+// ══════════════════════════════════════════════════════
+function endRound(){
+  G.phase='round_done';
+  G.players.forEach(p=>{
+    G.scores[p.id]+=calcScore(G.preds[p.id]||0, G.tricksWon[p.id]||0);
+  });
+  renderGame();
+
+  if(G.round>=TOTAL_R){
+    endGame(); return;
+  }
+
+  const cb=document.getElementById('contBtn');
+  cb.textContent=`OK → Ronda ${G.round+1}`;
+  cb.style.display=G.owner?'block':'none';
+
+  if(G.mode==='ai') setTimeout(()=>nextRound(), 2400);
+}
+
+function nextRound(){
+  G.round++;
+  // El repartidor rota al siguiente jugador
+  G.dealerIdx=(G.dealerIdx+1)%G.players.length;
+  startRound();
+  // Si el primer en predecir soy yo, abrir pantalla
+  const firstPred=(G.dealerIdx+1)%G.players.length;
+  if(!G.players[firstPred].isAI && G.players[firstPred].id===G.pid){
+    openPredScreen();
+  }
+}
+
+function calcScore(pred,won){
+  if(pred===0) return won===0 ? 10 : -10*won;
+  if(pred===won) return won+10*won;
+  if(won<pred) return won;
+  return won-10*(won-pred);
+}
+
+// ══════════════════════════════════════════════════════
+//  FIN DE JUEGO
+// ══════════════════════════════════════════════════════
+function endGame(){
+  G.phase='game_over';
+  let max=-Infinity, winners=[];
+  G.players.forEach(p=>{
+    const s=G.scores[p.id];
+    if(s>max){max=s;winners=[p];}else if(s===max) winners.push(p);
+  });
+  document.getElementById('endBody').innerHTML=
+    winners.map(w=>`<strong>${w.av} ${w.name}</strong>`).join(' y ')+
+    ` gana${winners.length>1?'n':''} con <strong>${max} pts</strong>! 🏆`;
+  const sorted=[...G.players].sort((a,b)=>G.scores[b.id]-G.scores[a.id]);
+  document.getElementById('endScores').innerHTML=sorted.map((p,i)=>
+    `<div class="final-row ${i===0?'final-winner':''}">
+       <span>${i+1}. ${p.av} ${p.name}${p.isAI?' 🤖':''}</span>
+       <span>${G.scores[p.id]} pts</span>
+     </div>`
+  ).join('');
+  document.getElementById('endModal').classList.add('on');
+}
+
+function backToMenu(){
+  document.getElementById('endModal').classList.remove('on');
+  if(G.mode==='multi'){const r=getRooms();delete r[G.rc];setRooms(r);}
+  G=fresh(); go('menu');
+}
+
+// ══════════════════════════════════════════════════════
+//  VALIDACIÓN DE CARTA
+// ══════════════════════════════════════════════════════
+function invalidCard(card, pid){
+  pid=pid||G.pid;
+  if(!G.played.length) return null;
+  const lead=G.played[0].card, ls=lead.suit, ts=G.trump.suit;
+  const hand=G.hands[pid]||[];
+  const hasLead=hand.some(c=>c.suit===ls);
+  if(hasLead && card.suit!==ls)
+    return `Seguí el palo (${SUITS[ls].n})`;
+  if(ls===ts && hasLead){
+    const tp=G.played.filter(e=>e.card.suit===ts);
+    if(tp.length){
+      const high=tp.reduce((h,e)=>cmpCard(e.card,h)>0?e.card:h,tp[0].card);
+      const canK=hand.filter(c=>c.suit===ts&&cmpCard(c,high)>0);
+      if(canK.length && !(card.suit===ts&&cmpCard(card,high)>0))
+        return 'Debés matar con triunfo más alto';
+    }
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER PRINCIPAL
+// ══════════════════════════════════════════════════════
+function renderGame(){
+  const N=G.players.length;
+
+  // Header
+  document.getElementById('roundLbl').textContent=
+    `Ronda ${G.round}/${TOTAL_R} · ${roundCards(G.round)} carta${roundCards(G.round)>1?'s':''}`;
+  document.getElementById('trumpDisp').innerHTML=G.trump?cardHTML(G.trump,true):'';
+
+  // ── Posicionar jugadores alrededor de la mesa ──────────────
+  // El jugador humano (G.pid) va SIEMPRE abajo-centro.
+  // Ordenamos los jugadores empezando por el humano.
+  const humanIdx = G.players.findIndex(p=>p.id===G.pid);
+  // Array ordenado: humano primero, luego en sentido horario
+  const ordered=[];
+  for(let i=0;i<N;i++) ordered.push(G.players[(humanIdx+i)%N]);
+
+  // Posiciones: 
+  //   ordered[0] = humano → abajo (manejado en handZone)
+  //   Resto distribuidos: top, left, right según cantidad
+  const opponents=ordered.slice(1); // todos menos el humano
+
+  const seatsTop=document.getElementById('seatsTop');
+  const seatLeft=document.getElementById('seatLeft');
+  const seatRight=document.getElementById('seatRight');
+  const seatsBottom=document.getElementById('seatsBottom');
+  seatsTop.innerHTML=''; seatLeft.innerHTML=''; seatRight.innerHTML=''; seatsBottom.innerHTML='';
+
+  // Distribución según cantidad de oponentes
+  // 1 op: top-center
+  // 2 op: left, top
+  // 3 op: left, top, right
+  // 4 op: left, top-left, top-right, right
+  // 5 op: left, top-left, top-center, top-right, right
+
+  let positions=[];
+  if(opponents.length===1)       positions=['top'];
+  else if(opponents.length===2)  positions=['left','top'];
+  else if(opponents.length===3)  positions=['left','top','right'];
+  else if(opponents.length===4)  positions=['left','top','top','right'];
+  else if(opponents.length===5)  positions=['left','top','top','top','right'];
+
+  opponents.forEach((p,i)=>{
+    const pos=positions[i]||'top';
+    const el=buildSeat(p);
+    if(pos==='top') seatsTop.appendChild(el);
+    else if(pos==='left') seatLeft.appendChild(el);
+    else if(pos==='right') seatRight.appendChild(el);
+  });
+
+  // Asiento del jugador humano abajo
+  const humanSeat=buildSeat(G.players[humanIdx], true);
+  seatsBottom.appendChild(humanSeat);
+
+  // ── Mesa (felt) ────────────────────────────────────────────
+  const felt=document.getElementById('felt');
+  felt.querySelectorAll('.played-slot').forEach(e=>e.remove());
+  const empty=document.getElementById('feltEmpty');
+
+  if(!G.played.length){
+    empty.style.display='block';
+  } else {
+    empty.style.display='none';
+    const winnerPid = G.phase==='trick_done' ? G.trickWinnerId : null;
+    G.played.forEach(({pid,card})=>{
+      const p=G.players.find(x=>x.id===pid);
+      const slot=document.createElement('div');
+      slot.className='played-slot';
+      slot.innerHTML=`<span class="pname">${p.av} ${p.name}</span>`;
+      const cEl=mkCard(card);
+      if(winnerPid&&pid===winnerPid) cEl.classList.add('c-winner');
+      slot.appendChild(cEl);
+      felt.appendChild(slot);
+    });
+  }
+
+  // ── Mano del humano ────────────────────────────────────────
+  const hz=document.getElementById('handZone');
+  hz.innerHTML='';
+  const isMyTurn=G.players[G.turnIdx]?.id===G.pid && G.phase==='playing';
+  (G.hands[G.pid]||[]).forEach(c=>{
+    const el=mkCard(c);
+    if(isMyTurn){
+      const r=invalidCard(c);
+      if(r){ el.classList.add('c-block'); el.title=r; el.onclick=()=>toast(r,true); }
+      else { el.classList.add('c-ok'); el.onclick=()=>selectCard(c,el); }
+    }
+    hz.appendChild(el);
+  });
+
+  // ── Turn bar ───────────────────────────────────────────────
+  const bar=document.getElementById('turnBar');
+  if(G.phase==='playing'){
+    const cur=G.players[G.turnIdx];
+    bar.style.display='block';
+    bar.textContent = cur?.id===G.pid
+      ? '🎴 Tu turno — elegí una carta'
+      : `Turno de ${cur?.av} ${cur?.name}...`;
+  } else if(G.phase==='predicting'){
+    const cur=G.players[G.turnIdx];
+    bar.style.display='block';
+    bar.textContent = cur?.id===G.pid
+      ? '✏️ Tu turno de predecir'
+      : `${cur?.av||''} ${cur?.name||'?'} está prediciendo...`;
+  } else if(G.phase==='round_done'){
+    bar.style.display='block';
+    bar.textContent='Ronda terminada — mirá los puntos 👀';
+  } else {
+    bar.style.display='none';
+  }
+
+  // ── Trick banner ────────────────────────────────────────────
+  if(G.phase!=='trick_done') document.getElementById('trickBnr').style.display='none';
+
+  // ── Botones de acción ─────────────────────────────────────
+  const pb=document.getElementById('playBtn');
+  if(G.phase!=='playing') pb.style.display='none';
+  // (contBtn se maneja en resolveTrick/endRound)
+
+  // ── Chat ─────────────────────────────────────────────────
+  document.getElementById('chatBox').style.display='none'; // solo si está abierto
+  document.getElementById('chatToggle').style.display=G.mode==='multi'?'block':'none';
+
+  // ── Scoreboard ────────────────────────────────────────────
+  renderSB();
+}
+
+// ── Construir widget de asiento ──────────────────────────────
+function buildSeat(p, isHuman=false){
+  const isDealer   = G.players[G.dealerIdx].id===p.id;
+  const isTurn     = G.players[G.turnIdx]?.id===p.id &&
+                     (G.phase==='playing'||G.phase==='predicting');
+  const pred       = G.preds[p.id];
+  const won        = G.tricksWon[p.id]||0;
+  const score      = G.scores[p.id]||0;
+  const cardsLeft  = (G.hands[p.id]||[]).length;
+
+  const seat=document.createElement('div');
+  seat.className='seat' + (isTurn?' active-turn':'') + (isDealer?' is-dealer':'');
+
+  // Avatar
+  const av=document.createElement('div');
+  av.className='seat-av';
+  av.textContent=p.av;
+  seat.appendChild(av);
+
+  // Nombre
+  const nm=document.createElement('div');
+  nm.className='seat-name';
+  nm.textContent=isDealer ? `${p.name} (R)` : p.name;
+  seat.appendChild(nm);
+
+  // Predicción / bazas
+  if(pred!==undefined){
+    const pi=document.createElement('div');
+    pi.className='seat-pred';
+    pi.textContent=`${won}/${pred}`;
+    seat.appendChild(pi);
+  }
+
+  // Puntos totales
+  const sc=document.createElement('div');
+  sc.className='seat-info';
+  sc.textContent=`${score} pts`;
+  seat.appendChild(sc);
+
+  // Cartas (para oponentes: mini-dorsos)
+  if(!isHuman && cardsLeft>0 && G.phase==='playing'){
+    const row=document.createElement('div');
+    row.className='side-cards';
+    for(let i=0;i<Math.min(cardsLeft,4);i++){
+      const mb=document.createElement('div');
+      mb.className='mini-card-back';
+      row.appendChild(mb);
+    }
+    if(cardsLeft>4){
+      const more=document.createElement('div');
+      more.style.cssText='font-size:10px;color:var(--txt2);';
+      more.textContent='+'+( cardsLeft-4);
+      row.appendChild(more);
+    }
+    seat.appendChild(row);
+  }
+
+  return seat;
+}
+
+// ── Scoreboard ────────────────────────────────────────────────
+function renderSB(){
+  document.getElementById('sbContent').innerHTML=G.players.map(p=>{
+    const pts=G.scores[p.id]||0;
+    const pred=G.preds[p.id]!==undefined?G.preds[p.id]:'?';
+    const w=G.tricksWon[p.id]||0;
+    return `<div class="sb-row">
+      <div>
+        <div class="sb-n">${p.av} ${p.name}</div>
+        <div class="sb-m">Pred: ${pred} · Bazas: ${w}</div>
+      </div>
+      <div class="sb-p ${pts<0?'neg':''}">${pts}</div>
+    </div>`;
+  }).join('');
+}
+function toggleSB(){
+  const el=document.getElementById('sbPanel');
+  el.style.display=el.style.display==='none'?'block':'none';
+  if(el.style.display==='block') renderSB();
+}
+
+// ── Chat ──────────────────────────────────────────────────────
+let chatOpen=false;
+function toggleChat(){
+  chatOpen=!chatOpen;
+  document.getElementById('chatBox').style.display=chatOpen?'block':'none';
+}
+function sendChat(){
+  const inp=document.getElementById('chatInp');
+  const msg=inp.value.trim(); if(!msg) return;
+  const el=document.getElementById('chatMsgs');
+  el.innerHTML+=`<div class="chat-msg"><span class="chat-from">${G.pav||'?'} ${G.pname||''}:</span>${msg.replace(/</g,'&lt;')}</div>`;
+  el.scrollTop=el.scrollHeight; inp.value='';
+}
+document.getElementById('chatInp').addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
+
+// ══════════════════════════════════════════════════════
+//  CREAR CARTAS HTML
+// ══════════════════════════════════════════════════════
+function mkCard(c){
+  const d=document.createElement('div');
+  d.className='card '+c.suit;
+  d.innerHTML=`<div class="card-v">${c.value}</div><div class="card-s">${SUITS[c.suit].s}</div>`;
+  return d;
+}
+function cardHTML(c,glow=false){
+  return `<div class="card ${c.suit}${glow?' trump-glow':''}">
+    <div class="card-v">${c.value}</div><div class="card-s">${SUITS[c.suit].s}</div></div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  MAZO
+// ══════════════════════════════════════════════════════
+function buildDeck(){
+  const d=[];
+  Object.keys(SUITS).forEach(s=>ORDER.forEach(v=>d.push({suit:s,value:v})));
+  return d;
+}
+function shuffle(d){
+  for(let i=d.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [d[i],d[j]]=[d[j],d[i]];
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  ADMIN
+// ══════════════════════════════════════════════════════
+function renderAdmin(){
+  const rooms=getRooms(), codes=Object.keys(rooms);
+  const el=document.getElementById('adminList');
+  if(!codes.length){
+    el.innerHTML='<p style="text-align:center;color:var(--txt2);padding:24px;">No hay salas activas.</p>'; return;
+  }
+  el.innerHTML=codes.map(code=>{
+    const r=rooms[code];
+    const age=Math.floor((Date.now()-(r.ts||0))/60000);
+    return `<div class="rm-row">
+      <div>
+        <div class="rm-code">${code}</div>
+        <div class="rm-meta">${r.players.length} jugadores · ${r.phase==='waiting'?'En espera':'Jugando'} · hace ${age} min</div>
+      </div>
+      <button class="btn btn-r btn-sm" onclick="delRoom('${code}')">Eliminar</button>
+    </div>`;
+  }).join('');
+}
+function delRoom(code){
+  if(!confirm('¿Eliminar sala '+code+'?')) return;
+  const r=getRooms(); delete r[code]; setRooms(r); renderAdmin(); toast('Sala eliminada');
+}
+
+// ══════════════════════════════════════════════════════
+//  URL PARAMS (join directo)
+// ══════════════════════════════════════════════════════
+(function(){
+  const p=new URLSearchParams(location.search);
+  const room=p.get('room');
+  if(room){ document.getElementById('joinCode').value=room.toUpperCase(); go('join'); }
+})();
+
+// ══════════════════════════════════════════════════════
+//  LIMPIEZA AUTOMÁTICA DE SALAS (>15 min)
+// ══════════════════════════════════════════════════════
+setInterval(()=>{
+  const r=getRooms(),now=Date.now();let ch=false;
+  Object.keys(r).forEach(k=>{if(now-(r[k].ts||0)>900000){delete r[k];ch=true;}});
+  if(ch) setRooms(r);
+},60000);
+</script>
+</body>
+</html>
